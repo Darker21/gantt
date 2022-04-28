@@ -461,6 +461,57 @@ var Gantt = (function () {
         element.setAttribute(attr, value);
     };
 
+    const RGB_REGEX =
+        /^^(rgb)(a?)[(]\s*([\d.]+\s*%?)\s*,\s*([\d.]+\s*%?)\s*,\s*([\d.]+\s*%?)\s*(?:,\s*([\d.]+)\s*)?[)]$/;
+    const HSL_REGEX =
+        /^^(hsl)(a?)[(]\s*([\d.]+\s*%?)\s*,\s*([\d.]+\s*%?)\s*,\s*([\d.]+\s*%?)\s*(?:,\s*([\d.]+)\s*)?[)]$/;
+    const HEX_REGEX = /^^#(?:[A-Fa-f0-9]{3}){1,2}$/;
+
+    var color_utils = {
+        isColor(value) {
+            return this.isRGB(value) || this.isHex(value) || this.isHSL(value);
+        },
+
+        isRGB(value) {
+            return RGB_REGEX.test(value);
+        },
+
+        isHSL(value) {
+            return HSL_REGEX.test(value);
+        },
+
+        isHex(value) {
+            return HEX_REGEX.test(value);
+        },
+    };
+
+    var css_utils = {
+        getCssVariable(
+            variable,
+            element = document.documentElement,
+            defaultValue = ''
+        ) {
+            var value, elementStyles;
+
+            // Allow query selectors and HTMLElements
+            if (typeof element === 'string') {
+                element = document.querySelector(element);
+            } else if (element instanceof HTMLElement === false) {
+                return defaultValue;
+            }
+
+            elementStyles = window.getComputedStyle(element) || null;
+
+            if (!variable || !elementStyles) {
+                return defaultValue;
+            }
+
+            value = elementStyles.getPropertyValue(variable);
+
+            return value;
+        },
+    };
+
     class Bar {
         constructor(gantt, task) {
             this.set_defaults(gantt, task);
@@ -506,6 +557,25 @@ var Gantt = (function () {
                 class: 'handle-group',
                 append_to: this.group,
             });
+
+            // Customization of bar colours
+            this.bar_color = this.check_color_variable(this.task.colors.bar || '');
+            this.progress_color = this.check_color_variable(
+                this.task.colors.progress || ''
+            );
+            this.text_color = this.check_color_variable(
+                this.task.colors.text || ''
+            );
+        }
+
+        check_color_variable(value) {
+            if (color_utils.isColor(value)) {
+                return value;
+            } else if (css_utils.getCssVariable(value)) {
+                return value;
+            } else {
+                return false;
+            }
         }
 
         prepare_helpers() {
@@ -547,6 +617,11 @@ var Gantt = (function () {
 
             animateSVG(this.$bar, 'width', 0, this.width);
 
+            // Override fill
+            if (this.bar_color) {
+                this.$bar.style.fill = this.bar_color;
+            }
+
             if (this.invalid) {
                 this.$bar.classList.add('bar-invalid');
             }
@@ -566,18 +641,28 @@ var Gantt = (function () {
             });
 
             animateSVG(this.$bar_progress, 'width', 0, this.progress_width);
+
+            // Override fill
+            if (this.progress_color) {
+                this.$bar_progress.style.fill = this.progress_color;
+            }
         }
 
         draw_label() {
-            createSVG('text', {
+            this.$label = createSVG('text', {
                 x: this.x + this.width / 2,
                 y: this.y + this.height / 2,
                 innerHTML: this.task.name,
+                fill: this.text_color,
                 class: 'bar-label',
                 append_to: this.bar_group,
             });
             // labels get BBox in the next tick
             requestAnimationFrame(() => this.update_label_position());
+
+            if (this.text_color) {
+                this.$label.style.fill = this.text_color;
+            }
         }
 
         draw_resize_handles() {
@@ -1176,6 +1261,10 @@ var Gantt = (function () {
                 // uids
                 if (!task.id) {
                     task.id = generate_id(task);
+                }
+
+                if (!task.colors) {
+                    task.colors = {};
                 }
 
                 return task;

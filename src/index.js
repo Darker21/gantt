@@ -150,6 +150,10 @@ export default class Gantt {
                 task.id = generate_id(task);
             }
 
+            if (!task.colors) {
+                task.colors = {};
+            }
+
             return task;
         });
 

@@ -1,5 +1,7 @@
 import date_utils from './date_utils';
 import { $, createSVG, animateSVG } from './svg_utils';
+import color_utils from './color_utils';
+import css_utils from './css_utils';
 
 export default class Bar {
     constructor(gantt, task) {
@@ -46,6 +48,25 @@ export default class Bar {
             class: 'handle-group',
             append_to: this.group,
         });
+
+        // Customization of bar colours
+        this.bar_color = this.check_color_variable(this.task.colors.bar || '');
+        this.progress_color = this.check_color_variable(
+            this.task.colors.progress || ''
+        );
+        this.text_color = this.check_color_variable(
+            this.task.colors.text || ''
+        );
+    }
+
+    check_color_variable(value) {
+        if (color_utils.isColor(value)) {
+            return value;
+        } else if (css_utils.getCssVariable(value)) {
+            return value;
+        } else {
+            return false;
+        }
     }
 
     prepare_helpers() {
@@ -87,6 +108,11 @@ export default class Bar {
 
         animateSVG(this.$bar, 'width', 0, this.width);
 
+        // Override fill
+        if (this.bar_color) {
+            this.$bar.style.fill = this.bar_color;
+        }
+
         if (this.invalid) {
             this.$bar.classList.add('bar-invalid');
         }
@@ -106,18 +132,28 @@ export default class Bar {
         });
 
         animateSVG(this.$bar_progress, 'width', 0, this.progress_width);
+
+        // Override fill
+        if (this.progress_color) {
+            this.$bar_progress.style.fill = this.progress_color;
+        }
     }
 
     draw_label() {
-        createSVG('text', {
+        this.$label = createSVG('text', {
             x: this.x + this.width / 2,
             y: this.y + this.height / 2,
             innerHTML: this.task.name,
+            fill: this.text_color,
             class: 'bar-label',
             append_to: this.bar_group,
         });
         // labels get BBox in the next tick
         requestAnimationFrame(() => this.update_label_position());
+
+        if (this.text_color) {
+            this.$label.style.fill = this.text_color;
+        }
     }
 
     draw_resize_handles() {
