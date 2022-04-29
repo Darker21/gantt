@@ -2,6 +2,7 @@ import date_utils from './date_utils';
 import { $, createSVG, animateSVG } from './svg_utils';
 import color_utils from './color_utils';
 import css_utils from './css_utils';
+import { MOVE_MODE } from './enums';
 
 export default class Bar {
     constructor(gantt, task) {
@@ -48,6 +49,11 @@ export default class Bar {
             class: 'handle-group',
             append_to: this.group,
         });
+
+        // Disable task modifications
+        this.start_move_disabled = this.task.disableStartChange || false;
+        this.end_move_disabled = this.task.disableEndChange || false;
+        this.progress_move_disabled = this.task.disableProgressChange || false;
 
         // Customization of bar colours
         this.bar_color = this.check_color_variable(this.task.colors.bar || '');
@@ -162,29 +168,37 @@ export default class Bar {
         const bar = this.$bar;
         const handle_width = 8;
 
-        createSVG('rect', {
-            x: bar.getX() + bar.getWidth() - 9,
-            y: bar.getY() + 1,
-            width: handle_width,
-            height: this.height - 2,
-            rx: this.corner_radius,
-            ry: this.corner_radius,
-            class: 'handle right',
-            append_to: this.handle_group,
-        });
+        if (!this.end_move_disabled) {
+            createSVG('rect', {
+                x: bar.getX() + bar.getWidth() - 9,
+                y: bar.getY() + 1,
+                width: handle_width,
+                height: this.height - 2,
+                rx: this.corner_radius,
+                ry: this.corner_radius,
+                class: 'handle right',
+                append_to: this.handle_group,
+            });
+        }
 
-        createSVG('rect', {
-            x: bar.getX() + 1,
-            y: bar.getY() + 1,
-            width: handle_width,
-            height: this.height - 2,
-            rx: this.corner_radius,
-            ry: this.corner_radius,
-            class: 'handle left',
-            append_to: this.handle_group,
-        });
+        if (!this.start_move_disabled) {
+            createSVG('rect', {
+                x: bar.getX() + 1,
+                y: bar.getY() + 1,
+                width: handle_width,
+                height: this.height - 2,
+                rx: this.corner_radius,
+                ry: this.corner_radius,
+                class: 'handle left',
+                append_to: this.handle_group,
+            });
+        }
 
-        if (this.task.progress && this.task.progress < 100) {
+        if (
+            !this.progress_move_disabled &&
+            this.task.progress &&
+            this.task.progress < 100
+        ) {
             this.$handle_progress = createSVG('polygon', {
                 points: this.get_progress_polygon_points().join(','),
                 class: 'handle progress',
@@ -266,7 +280,12 @@ export default class Bar {
             const valid_x = xs.reduce((prev, curr) => {
                 return x >= curr;
             }, x);
-            if (!valid_x) {
+            if (
+                (!valid_x &&
+                    this.gantt.options.move_mode === MOVE_MODE.RELATIVE) ||
+                this.end_move_disabled ||
+                this.start_move_disabled // Disable move if cannot change the start or end date
+            ) {
                 width = null;
                 return;
             }
@@ -426,12 +445,12 @@ export default class Bar {
 
     update_handle_position() {
         const bar = this.$bar;
-        this.handle_group
-            .querySelector('.handle.left')
-            .setAttribute('x', bar.getX() + 1);
-        this.handle_group
-            .querySelector('.handle.right')
-            .setAttribute('x', bar.getEndX() - 9);
+        const startHandle = this.handle_group.querySelector('.handle.left');
+        startHandle && startHandle.setAttribute('x', bar.getX() + 1);
+
+        const endHandle = this.handle_group.querySelector('.handle.right');
+        endHandle && endHandle.setAttribute('x', bar.getEndX() - 9);
+
         const handle = this.group.querySelector('.handle.progress');
         handle &&
             handle.setAttribute('points', this.get_progress_polygon_points());

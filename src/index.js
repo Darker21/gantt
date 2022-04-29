@@ -3,6 +3,7 @@ import { $, createSVG } from './svg_utils';
 import Bar from './bar';
 import Arrow from './arrow';
 import Popup from './popup';
+import { MOVE_MODE } from './enums';
 
 import './gantt.scss';
 
@@ -87,8 +88,16 @@ export default class Gantt {
             popup_trigger: 'click',
             custom_popup_html: null,
             language: 'en',
+            move_mode: 'relative', // switch, free, relative (default= relative)
         };
         this.options = Object.assign({}, default_options, options);
+
+        // Default to relative move mode
+        this.options.move_mode = Object.getOwnPropertyNames(MOVE_MODE).includes(
+            this.options.move_mode.toString().toUpperCase()
+        )
+            ? this.options.move_mode
+            : MOVE_MODE.RELATIVE;
     }
 
     setup_tasks(tasks) {
@@ -686,7 +695,9 @@ export default class Gantt {
             parent_bar_id = bar_wrapper.getAttribute('data-id');
             const ids = [
                 parent_bar_id,
-                ...this.get_all_dependent_tasks(parent_bar_id),
+                ...(this.options.move_mode === MOVE_MODE.RELATIVE
+                    ? this.get_all_dependent_tasks(parent_bar_id)
+                    : []),
             ];
             bars = ids.map((id) => this.get_bar(id));
 

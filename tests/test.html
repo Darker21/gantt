@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'nonce-N0X5/IzAtEeSBRATmrkhlg==';">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Gantt Test</title>
+	<link rel="stylesheet" href="/dist/frappe-gantt.min.css">
+	<script src="/dist/frappe-gantt.js"></script>
+</head>
+
+<body>
+	<div id="gantt">
+
+	</div>
+
+	<script nonce="N0X5/IzAtEeSBRATmrkhlg==">
+
+		fetch("test.json").then(res => res.json()).then(out => {
+			const container = document.getElementById("gantt");
+
+			new Gantt(container, out, { move_mode: "relative" });
+		});
+	</script>
+</body>
+
+</html>

@@ -3,7 +3,7 @@
     <h2>Frappe Gantt</h2>
     <p align="center">
         <p>A simple, interactive, modern gantt chart library for the web</p>
-        <p><em>This fork adds the ability to customize bar colours on a task-by-task basis (see <a href="#Usage">Usage</a> section)</em></p>
+        <p><em>This fork adds the ability to customize bar colours on a task-by-task basis and the addition of modularity of bar change behaviour and capabilities (see <a href="#Usage">Usage</a> section)</em></p>
         <a href="https://frappe.github.io/gantt">
             <b>View the demo »</b>
         </a>
@@ -39,6 +39,9 @@ var tasks = [
     progress: 20,
     dependencies: 'Task 2, Task 3',
     custom_class: 'bar-milestone', // optional
+    disableProgressChange: true,
+    disableEndChange: true,
+    disableStartChange: true,
     colors: { // Optional
         // Customize colours for the task
         bar: "#3e3e3e",
@@ -64,7 +67,8 @@ var gantt = new Gantt("#gantt", tasks, {
     padding: 18,
     view_mode: 'Day',
     date_format: 'YYYY-MM-DD',
-    custom_popup_html: null
+    custom_popup_html: null,
+    move_mode: 'relative' // `relative` or `free`
 });
 ```
 
