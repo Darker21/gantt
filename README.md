@@ -39,9 +39,9 @@ var tasks = [
     progress: 20,
     dependencies: 'Task 2, Task 3',
     custom_class: 'bar-milestone', // optional
-    disableProgressChange: true,
-    disableEndChange: true,
-    disableStartChange: true,
+    disable_progress_change: false,
+    disable_end_change: false,
+    disable_start_change: false,
     colors: { // Optional
         // Customize colours for the task
         bar: "#3e3e3e",

@@ -51,9 +51,10 @@ export default class Bar {
         });
 
         // Disable task modifications
-        this.start_move_disabled = this.task.disableStartChange || false;
-        this.end_move_disabled = this.task.disableEndChange || false;
-        this.progress_move_disabled = this.task.disableProgressChange || false;
+        this.start_move_disabled = this.task.disable_start_change || false;
+        this.end_move_disabled = this.task.disable_end_change || false;
+        this.progress_move_disabled =
+            this.task.disable_progress_change || false;
 
         // Customization of bar colours
         this.bar_color = this.check_color_variable(this.task.colors.bar || '');
