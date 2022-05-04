@@ -665,7 +665,6 @@ var Gantt = (function () {
                 x: this.x + this.width / 2,
                 y: this.y + this.height / 2,
                 innerHTML: this.task.name,
-                fill: this.text_color,
                 class: 'bar-label',
                 append_to: this.bar_group,
             });
